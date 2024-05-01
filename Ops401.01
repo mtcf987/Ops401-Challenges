@@ -23,5 +23,5 @@ def main()
         else:
             print("Network Inactive")
 
-# Main function
+
 
