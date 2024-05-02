@@ -3,3 +3,61 @@ Ops401 Challenge 03
 Assignment: Uptime Sensor Tool Part 2 of 2
 5/1/2024
 
+# review, add email, and test
+
+
+import socket
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import time
+
+def send_notification(email, password, host, old_status, new_status):
+    from_email = email
+    to_email = email
+
+    subject = "Host Status Change Notification"
+    body = f"The status of host {host} has changed from {old_status} to {new_status} at {time.ctime()}."
+
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(from_email, password)
+    text = msg.as_string()
+    server.sendmail(from_email, to_email, text)
+    server.quit()
+
+def check_host_status(host):
+    try:
+        socket.create_connection((host, 80), timeout=2)
+        return "up"
+    except OSError:
+        return "down"
+
+def main():
+    email = input("Enter your email address: ")
+    password = input("Enter your email password: ")
+
+    hosts = ["example.com", "google.com"]  # List of hosts to monitor
+    host_statuses = {host: None for host in hosts}
+
+    while True:
+        for host in hosts:
+            new_status = check_host_status(host)
+            old_status = host_statuses[host]
+            
+            if old_status is None:
+                host_statuses[host] = new_status
+            elif old_status != new_status:
+                host_statuses[host] = new_status
+                send_notification(email, password, host, old_status, new_status)
+        
+        time.sleep(60)  # Check status every minute
+
+if __name__ == "__main__":
+    main()
