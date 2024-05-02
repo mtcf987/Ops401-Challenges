@@ -3,7 +3,7 @@ Ops401 Challenge 03
 Assignment: Uptime Sensor Tool Part 2 of 2
 5/1/2024
 
-# review, add email, and test
+# review, add email, and test, then optimize
 
 
 import socket
