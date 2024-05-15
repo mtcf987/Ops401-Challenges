@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
+
 Malena Tomlin
 Ops401 Challenge 12
 Network Security Tool with Scapy Part 2 of 3
-
-#!/usr/bin/env python3
 
 import pandas as pd
 from scapy.all import *
