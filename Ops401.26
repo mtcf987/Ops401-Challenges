@@ -107,4 +107,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Resources: Used openAI to optimize code.
+# Resources: Used openAI to further define steps and to optimize code.
