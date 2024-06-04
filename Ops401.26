@@ -4,7 +4,7 @@
 # Author:        Malena Tomlin
 # Script:        Event Logging Tool Part 1 of 3
 # Date Entered:  6/3/2024
-# Purpose:       
+# Purpose:       Python Logging
 
 import logging
 from cryptography.fernet import Fernet
