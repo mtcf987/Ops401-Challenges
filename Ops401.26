@@ -1,0 +1,21 @@
+
+#!/usr/bin/env python3
+
+# Author:        Malena Tomlin
+# Script:        Event Logging Tool Part 1 of 3
+# Date Entered:  6/3/2024
+# Purpose:       
+
+
+import logging
+from cryptography.fernet inport Fernet
+import os
+
+# Configure logging
+logging.basicConfig(filename='encryption_tool.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def gerenate_key():
+    try:
+        key = Fernet.generate_key()
+        with open(
+
