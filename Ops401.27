@@ -1,4 +1,39 @@
 
 #!/usr/bin/env python3
 
-Author:       Malena Tomlin
+# Author:        Malena Tomlin
+# Script:        Event Logging Tool Part 2 of 3
+# Date Entered:  6/4/2024
+# Purpose:       Python Logging (include rotation feature based on size)
+
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+from cryptography.fernet import Fernet
+
+# Configure logging with rotation based on size
+max_log_size_bytes = 1000000  # 1 MB
+handler = RotatingFileHandler('encryption_tools.log', maxBytes=max_log_size_bytes, backupCount=5)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger = logging.getLogger()
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
+def generate_key():
+    """Generates a new encryption key using Fernet and saves it to 'key.key'."""
+    try:
+        key = Fernet.generate_key()
+        with open('key.key', 'wb') as key_file:
+            key_file.write(key)
+        logging.info("Key generated and saved successfully.")
+        return key
+    except Exception as e:
+        logging.error(f"Failed to generate or save key: {e}")
+
+def load_key():
+    """Loads the encryption key from 'key.key'."""
+    try:
+        return open('key.key', 'rb').read()
+    except Exception as e:
+        logging.error(f"Failed to load key: {e}")
+        raise
