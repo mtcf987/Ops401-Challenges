@@ -1,6 +1,79 @@
-
+#!/usr/bin/env python3
 
 # Author:     Malena Tomlin
 # Script:     Signature-based Malware Detection Part 1 of 3
 # Date:       06/10/2024
 
+import os
+import sys
+
+def search_for_file(directory, filename):
+    for root, _, files in os.walk(directory):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+def print_directory_suggestions():
+    print("Here are some common directory suggestions:")
+    print(f"Home Directory: {os.path.expanduser('~')}")
+    print("Root Directory: /")
+    print("Current Working Directory: ./")
+    print("You can enter one of these paths, or any other valid full path to a directory.")
+
+def main():
+    try:
+        print("Operating System Detected:", os.name)
+        
+        while True:
+            # File name input with help option
+            filename = input("Enter the file name to search for (or type 'help' for instructions): ")
+            if filename.lower() == 'help':
+                print("Enter the name of the file you're looking for, e.g., 'myfile.txt'.")
+                continue
+            
+            # Directory choice with help option
+            print("Choose a directory to search:")
+            print("1. Desktop")
+            print("2. Documents")
+            print("3. Downloads")
+            print("4. Enter a different directory")
+            print("Type 'help' for instructions on directory selection.")
+            choice = input("Enter your choice (number): ")
+            if choice.lower() == 'help':
+                print("Enter the number corresponding to the directory you want to search in.")
+                continue
+
+            directory_choices = {
+                '1': os.path.expanduser('~/Desktop'),
+                '2': os.path.expanduser('~/Documents'),
+                '3': os.path.expanduser('~/Downloads')
+            }
+
+            directory = directory_choices.get(choice)
+            if choice == '4' or not directory:
+                print_directory_suggestions()
+                while True:
+                    dir_input = input("Enter the full path of the directory (or type 'help' for instructions): ")
+                    if dir_input.lower() == 'help':
+                        print("Enter the full path to the directory where you want to search for the file.")
+                    elif os.path.isdir(dir_input):
+                        directory = dir_input
+                        break
+                    else:
+                        print("Invalid directory. Please enter a valid directory.")
+            else:
+                break
+
+            # File searching logic
+            found_file = search_for_file(directory, filename)
+            if found_file:
+                print(f"File found: {found_file}")
+            else:
+                print("File not found.")
+
+    except KeyboardInterrupt:
+        print("\nScript interrupted. Exiting.")
+        sys.exit()
+
+if __name__ == "__main__":
+    main()
