@@ -1,6 +1,96 @@
-
+#!/usr/bin/env python3
 
 # Author:     Malena Tomlin
 # Script:     Signature-based Malware Detection Part 3 of 3
 # Date:       06/12/2024
+# Resources:  OpenAI for optimization
 
+import os
+import hashlib
+import requests
+
+def hash_file(filename):
+    print(f"Hashing file: {filename}")
+    h = hashlib.md5()
+    try:
+        with open(filename, 'rb') as file:
+            for chunk in iter(lambda: file.read(1024), b''):
+                h.update(chunk)
+    except IOError as e:
+        print(f"Error opening file: {e}")
+        return None
+    return h.hexdigest()
+
+def check_virustotal(file_hash):
+    apikey = os.getenv('API_KEY_VIRUSTOTAL')
+    if not apikey:
+        print("API key for VirusTotal is not set.")
+        return
+    response = requests.get(f"https://www.virustotal.com/api/v3/files/{file_hash}", headers={"x-apikey": apikey})
+    if response.status_code == 200:
+        print(response.json())
+    else:
+        print(f"Error checking VirusTotal: {response.status_code}")
+
+def search_file(file_name, directory):
+    print(f"Searching for '{file_name}' in '{directory}'...")
+    hits, files_searched = 0, 0
+
+    if not os.path.isdir(directory):
+        print("Error: Invalid directory path.")
+        return 0, 0
+
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file == file_name:
+                hits += 1
+                file_path = os.path.join(root, file)
+                print(f"Found: {file_path}")
+                file_hash = hash_file(file_path)
+                if file_hash and input("Check this file hash with VirusTotal? (y/n): ").strip().lower() == 'y':
+                    check_virustotal(file_hash)
+            files_searched += 1
+            print(f"Files searched: {files_searched}", end='\r')
+
+    print(f"\nSearch completed. {hits} hits found after searching {files_searched} files.")
+    return hits, files_searched
+
+def list_directories():
+    print("Listing directories...")
+    current_directory = os.getcwd()
+    for item in os.listdir("/"):
+        item_path = os.path.join("/", item)
+        if os.path.isdir(item_path):
+            print(f"- {item_path} {'(Current Directory)' if item_path == current_directory else ''}")
+    print("Directory listing complete.")
+
+def search_files():
+    file_name = input("Enter the file name to search for: ").strip()
+    directory = input("Enter the directory to search in or type 'list' to see available directories: ").strip()
+
+    if directory.lower() == "list":
+        list_directories()
+    elif not file_name or not directory:
+        print("File name or directory was not provided. Please try again.")
+    elif not os.path.exists(directory):
+        print("Error: Directory does not exist.")
+    else:
+        search_file(file_name, directory)
+
+def main():
+    print("Welcome to the malware detection script. Please select an option.")
+    options = {
+        "1": search_files,
+        "2": list_directories,
+        "3": exit
+    }
+    while True:
+        print("1. Search for files\n2. List available directories\n3. Exit")
+        choice = input("Enter your choice: ").strip()
+        if choice in options:
+            options[choice]()
+        else:
+            print("Invalid choice. Please enter 1, 2, or 3.")
+
+if __name__ == "__main__":
+    main()
