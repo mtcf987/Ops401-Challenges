@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Author:     Malena Tomlin
+# Script:     Signature-based Malware Detection Part 2 of 3
+# Date:       06/11/2024
+
 import os
 import sys
 import hashlib
