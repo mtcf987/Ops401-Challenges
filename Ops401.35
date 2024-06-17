@@ -1,0 +1,55 @@
+
+
+#Author:             Malena Tomlin
+#Script Name:        Simple Information Gathering Script
+#Date of Revision:   06/17/2024
+#Purpose:            Gathers IP address/Port status for target
+
+local nmap = require "nmap"
+
+-- Script description and license
+description = [[
+Custom NSE script to check the status of predefined ports (FTP, SSH, Telnet, SMTP, POP3, and HTTP/HTTPS).
+]]
+license = "Same as Nmap--See https://nmap.org/book/man-legal.html"
+
+-- Predefined ports to check
+local predefined_ports = {21, 22, 23, 25, 110, 443}
+
+-- Port rule function: determines which ports the script should operate on
+portrule = function(host, port)
+  return nmap.match(port.number, predefined_ports)
+end
+
+-- Action function: performs the actual work when the script is called
+action = function(host, port)
+  local result = {}
+  
+  -- Determine port status and service name
+  local status_message = {
+    open = function(port)
+      local service = nmap.service_name(port.number) or "unknown"
+      local version = port.version or "unknown"
+      local output = string.format("Port %d (%s) is open.", port.number, service)
+      if version then
+        output = output .. " Version: " .. version
+      end
+      return output
+    end,
+    closed = function(port)
+      return string.format("Port %d is closed", port.number)
+    end,
+    filtered = function(port)
+      return string.format("Port %d is filtered", port.number)
+    end,
+    unknown = function(port)
+      return string.format("Port %d has an unknown state", port.number)
+    end
+  }
+  
+  -- Execute appropriate status function based on port state
+  local state_function = status_message[port.state] or status_message.unknown
+  table.insert(result, state_function(port))
+  
+  return result
+end
