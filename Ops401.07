@@ -1,1 +1,134 @@
 
+
+
+
+
+import os
+import logging
+from cryptography.fernet import Fernet
+
+# Configure logging
+logging.basicConfig(filename='encryption.log', level=logging.ERROR, 
+                    format='%(asctime)s:%(levelname)s:%(message)s')
+
+# Constants for user choices
+ENCRYPT_FILE = '1'
+DECRYPT_FILE = '2'
+ENCRYPT_MESSAGE = '3'
+DECRYPT_MESSAGE = '4'
+ENCRYPT_FOLDER = '5'
+DECRYPT_FOLDER = '6'
+
+def generate_key() -> bytes:
+    """Generate and save a new encryption key."""
+    key = Fernet.generate_key()
+    with open('key.key', 'wb') as key_file:
+        key_file.write(key)
+    return key
+
+def load_key() -> bytes:
+    """Load an existing encryption key."""
+    try:
+        with open('key.key', 'rb') as key_file:
+            return key_file.read()
+    except Exception as e:
+        logging.error(f"Error loading key: {e}")
+        raise
+
+def encrypt_file(filepath: str, key: bytes):
+    """Encrypt the contents of a file."""
+    try:
+        with open(filepath, 'rb') as file:
+            file_data = file.read()
+        encrypted_data = Fernet(key).encrypt(file_data)
+        with open(filepath, 'wb') as file:
+            file.write(encrypted_data)
+    except Exception as e:
+        logging.error(f"Error encrypting file '{filepath}': {e}")
+
+def decrypt_file(filepath: str, key: bytes):
+    """Decrypt the contents of a file."""
+    try:
+        with open(filepath, 'rb') as file:
+            encrypted_data = file.read()
+        decrypted_data = Fernet(key).decrypt(encrypted_data)
+        with open(filepath, 'wb') as file:
+            file.write(decrypted_data)
+    except Exception as e:
+        logging.error(f"Error decrypting file '{filepath}': {e}")
+
+def encrypt_message(message: str, key: bytes) -> bytes:
+    """Encrypt a message."""
+    try:
+        return Fernet(key).encrypt(message.encode())
+    except Exception as e:
+        logging.error(f"Error encrypting message: {e}")
+        return b''
+
+def decrypt_message(encrypted_message: str, key: bytes) -> str:
+    """Decrypt a message."""
+    try:
+        encrypted_message_bytes = encrypted_message.encode().decode('unicode_escape').encode('ISO-8859-1')
+        return Fernet(key).decrypt(encrypted_message_bytes).decode()
+    except Exception as e:
+        logging.error(f"Error decrypting message: {e}")
+        return ""
+
+def encrypt_folder(folder_path: str, key: bytes):
+    """Encrypt all files in a folder."""
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            encrypt_file(file_path, key)
+
+def decrypt_folder(folder_path: str, key: bytes):
+    """Decrypt all files in a folder."""
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            decrypt_file(file_path, key)
+
+def main():
+    print("Choose a mode:\n"
+          "1. Encrypt a file\n"
+          "2. Decrypt a file\n"
+          "3. Encrypt a message\n"
+          "4. Decrypt a message\n"
+          "5. Encrypt a folder\n"
+          "6. Decrypt a folder")
+    choice = input("Enter your choice (1/2/3/4/5/6): ")
+
+    if choice in [ENCRYPT_FILE, ENCRYPT_MESSAGE, ENCRYPT_FOLDER]:
+        key = generate_key()  # Generate a new key for encryption
+    elif choice in [DECRYPT_FILE, DECRYPT_MESSAGE, DECRYPT_FOLDER]:
+        key = load_key()  # Load the existing key for decryption
+    else:
+        print("Invalid choice.")
+        return
+
+    if choice == ENCRYPT_FILE:
+        filepath = input("Enter the file path: ")
+        encrypt_file(filepath, key)
+        print("File encrypted successfully.")
+    elif choice == DECRYPT_FILE:
+        filepath = input("Enter the file path: ")
+        decrypt_file(filepath, key)
+        print("File decrypted successfully.")
+    elif choice == ENCRYPT_MESSAGE:
+        message = input("Enter the message to encrypt: ")
+        encrypted_message = encrypt_message(message, key)
+        print(f"Encrypted message: {encrypted_message}")
+    elif choice == DECRYPT_MESSAGE:
+        encrypted_message = input("Enter the encrypted message to decrypt (without b' and '): ")
+        print("Decrypted message:", decrypt_message(encrypted_message, key))
+    elif choice == ENCRYPT_FOLDER:
+        folder_path = input("Enter the folder path: ")
+        encrypt_folder(folder_path, key)
+        print("Folder and its contents encrypted successfully.")
+    elif choice == DECRYPT_FOLDER:
+        folder_path = input("Enter the folder path: ")
+        decrypt_folder(folder_path, key)
+        print("Folder and its contents decrypted successfully.")
+
+if __name__ == "__main__":
+    main()
