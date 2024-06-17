@@ -1,1 +1,52 @@
+#!/usr/bin/env python3
 
+# Author:        Malena Tomlin
+# Script:        Automated Brute Force Wordlist Attack Tool Part 1 of 3
+# Revision Date: 6/17/2024
+
+import time
+from typing import Optional, List
+
+def read_wordlist(file_path: str) -> Optional[List[str]]:
+    """Read the wordlist file and return its lines."""
+    try:
+        with open(file_path, 'r', encoding='latin-1') as file:
+            return file.readlines()
+    except FileNotFoundError:
+        print("File not found. Please check the file path.")
+        return None
+
+def dictionary_iterator(words: List[str]) -> None:
+    """Iterate through the word list and print each word with a delay."""
+    for word in words:
+        word = word.strip()
+        print(word)
+        time.sleep(0.5)  # Delay of 0.5 seconds between words
+
+def password_recognized(search_string: str, words: List[str]) -> None:
+    """Check if the search string is in the word list."""
+    words = [word.strip() for word in words]  # Remove newline characters
+    if search_string in words:
+        print(f"'{search_string}' appeared in the word list.")
+    else:
+        print(f"'{search_string}' did not appear in the word list.")
+
+def main() -> None:
+    """Main function to handle user input and execute the chosen mode."""
+    mode = input("Select mode (1: Offensive, 2: Defensive): ").strip()
+    file_path = input("Enter the word list file path: ").strip()
+
+    words = read_wordlist(file_path)
+    if words is None:
+        return
+
+    if mode == '1':
+        dictionary_iterator(words)
+    elif mode == '2':
+        search_string = input("Enter the string to search: ").strip()
+        password_recognized(search_string, words)
+    else:
+        print("Invalid mode selected.")
+
+if __name__ == "__main__":
+    main()
