@@ -1,1 +1,110 @@
+#!/usr/bin/env python3
 
+#Author:           Malena Tomlin
+#Script Name:      Brute Force Wordlist Attack Tool Pt 3
+#Date of Revision: 6/17/2024
+
+import ssl
+import time
+import paramiko
+from zipfile import ZipFile
+from typing import Optional
+
+# Configure SSL context to ignore certificate verification
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+def dict_iterator(target_file: str) -> None:
+    """Iterate through a word list file and print each word with a delay."""
+    try:
+        with open(target_file, 'r') as file:
+            for word in file:
+                word = word.strip()
+                print(word)
+                time.sleep(2)  # 2 second delay between words
+    except FileNotFoundError:
+        print("Please check the file path and try again.")
+
+def password_recognizer(user_word: str, target_file: str) -> None:
+    """Check if a word is in a word list file."""
+    try:
+        with open(target_file, 'r') as file:
+            if user_word.lower() in (word.strip().lower() for word in file):
+                print(f"The word '{user_word}' is in the word list.")
+            else:
+                print(f"The word '{user_word}' is not in the word list.")
+    except FileNotFoundError:
+        print("That is not a valid file path.")
+
+def get_host() -> str:
+    """Prompt the user for the SSH host."""
+    return input("Please enter an SSH client to connect to or press Enter for default (127.0.0.1): ") or "127.0.0.1"
+
+def get_user() -> str:
+    """Prompt the user for the SSH username."""
+    return input("Please enter a username or press Enter for default (user1): ") or "user1"
+
+def get_password() -> str:
+    """Prompt the user for the SSH password."""
+    return input("Please enter a password or press Enter for default: ") or "password1234"
+
+def ssh_endpoint() -> None:
+    """Connect to an SSH endpoint and execute commands."""
+    port = 22
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        ssh.connect(get_host(), port, get_user(), get_password())
+        commands = ["whoami", "ls -l", "uptime"]
+        for command in commands:
+            stdin, stdout, stderr = ssh.exec_command(command)
+            time.sleep(2)
+            output = stdout.read().decode()
+            print("-" * 80)
+            print(output)
+        print("-" * 80)
+    except paramiko.AuthenticationException as e:
+        print("Authentication failed.")
+        print(e)
+
+def unzip_file(target_file: str) -> None:
+    """Unzip a password-protected zip file."""
+    try:
+        with ZipFile(target_file) as zf:
+            zf.extractall(pwd=bytes('rockyou.txt', 'utf-8'))
+            print(f'The file {target_file} has been unzipped.')
+    except FileNotFoundError:
+        print("Please check the file path and try again.")
+    except RuntimeError as e:
+        print("An error occurred while unzipping the file.")
+        print(e)
+
+def main() -> None:
+    """Main function to handle user input and execute the chosen mode."""
+    user_mode = input(
+        "Please enter:\n"
+        "'1' for the 'dictionary iterator' tactic,\n"
+        "'2' to check whether a string is in the password list,\n"
+        "'3' to unzip a password-protected file.\n"
+    ).strip()
+
+    if user_mode == '1':
+        target_file = input("Please enter the file path of the word list you want to search: ").strip()
+        dict_iterator(target_file)
+    elif user_mode == '2':
+        user_word = input("Please enter a word you would like to search for in the password list: ").strip()
+        target_file = input("Please enter the file path of the word list you want to search: ").strip()
+        password_recognizer(user_word, target_file)
+    elif user_mode == '3':
+        target_file = input("Please enter the file path of the target file you want to unzip: ").strip()
+        unzip_file(target_file)
+    else:
+        print("Invalid selection. Please enter 1, 2, or 3.")
+
+if __name__ == "__main__":
+    ssh_endpoint()
+    main()
