@@ -1,1 +1,116 @@
+#!/usr/bin/env python3
 
+# Author:        Malena Tomlin
+# Script:        Network Security Tool with Scapy Part 3 of 3
+# Revision Date: 6/17/2024
+
+import pandas as pd
+from scapy.all import *
+import platform
+import os
+import ipaddress
+from tqdm import tqdm
+
+def scan_port(ip: str, port: int) -> tuple[int, str]:
+    """Scan a single port on a target IP."""
+    try:
+        pkt = IP(dst=ip) / TCP(dport=port, flags="S")
+        resp = sr1(pkt, timeout=2, verbose=0)
+
+        if resp is None:
+            return port, "Filtered"
+        elif resp.haslayer(TCP):
+            tcp_layer = resp.getlayer(TCP)
+            if tcp_layer.flags == 0x12:  # SYN-ACK
+                sr(IP(dst=ip) / TCP(dport=port, flags="R"), timeout=1, verbose=0)
+                return port, "Open"
+            elif tcp_layer.flags == 0x14:  # RST-ACK
+                return port, "Closed"
+        return port, "Unknown"
+    except KeyboardInterrupt:
+        print("\nScan interrupted by user.")
+        return port, "Interrupted"
+
+def export_results(scan_results: list[tuple[int, str]], filename: str):
+    """Export scan results to a file."""
+    df = pd.DataFrame(scan_results, columns=["Port", "Status"])
+    file_extension = "xlsx" if platform.system() == "Windows" else "csv"
+    output_path = f"{filename}.{file_extension}"
+    if file_extension == "xlsx":
+        df.to_excel(output_path, index=False)
+    else:
+        df.to_csv(output_path, index=False)
+    print(f"Scan results exported successfully to {output_path}.")
+
+def generate_ip_range(cidr: str) -> list[str]:
+    """Generate a list of IPs from a CIDR range."""
+    network = ipaddress.ip_network(cidr, strict=False)
+    return [str(ip) for ip in network.hosts()]
+
+def icmp_ping_sweep(ip_list: list[str]):
+    """Perform ICMP ping sweep over a list of IPs."""
+    online_hosts = 0
+    for ip in ip_list:
+        pkt = IP(dst=ip) / ICMP()
+        resp = sr1(pkt, timeout=1, verbose=0)
+        if resp is None:
+            print(f"{ip} is down or not responding.")
+        elif (resp.haslayer(ICMP) and
+              resp.getlayer(ICMP).type == 3 and
+              resp.getlayer(ICMP).code in [1, 2, 3, 9, 10, 13]):
+            print(f"{ip} is actively blocking ICMP traffic.")
+        else:
+            print(f"{ip} is responding.")
+            online_hosts += 1
+    print(f"\nTotal online hosts: {online_hosts}")
+
+def scan_ip_and_ports(target_ip: str):
+    """Scan ports on a target IP."""
+    try:
+        scan_results = []
+        for port in tqdm(range(1, 1025), desc="Scanning ports"):
+            result = scan_port(target_ip, port)
+            scan_results.append(result)
+            if result[1] == "Interrupted":
+                break
+        export_results(scan_results, "scan_results")
+    except KeyboardInterrupt:
+        print("\nScan interrupted by user.")
+
+def main_menu():
+    """Display the main menu and handle user input."""
+    while True:
+        print("1. Scan IP Address and Ports")
+        print("2. ICMP Ping Sweep")
+        print("3. Exit")
+        choice = input("Select an option (1, 2, or 3): ")
+
+        if choice == "1":
+            target_ip = input("Enter target IP: ").strip()
+            if icmp_check(target_ip):
+                scan_ip_and_ports(target_ip)
+            else:
+                print(f"{target_ip} is down or not responding to ICMP ping.")
+        elif choice == "2":
+            cidr = input("Enter network address (CIDR format, e.g., 192.168.1.0/24): ").strip()
+            ip_list = generate_ip_range(cidr)
+            icmp_ping_sweep(ip_list)
+        elif choice == "3":
+            break
+        else:
+            print("Invalid choice. Please select a valid option.")
+
+def icmp_check(ip: str) -> bool:
+    """Check if an IP is responding to ICMP ping."""
+    pkt = IP(dst=ip) / ICMP()
+    resp = sr1(pkt, timeout=1, verbose=0)
+    if resp is not None:
+        print(f"{ip} is responding to ICMP ping.")
+        return True
+    return False
+
+if __name__ == "__main__":
+    try:
+        main_menu()
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
