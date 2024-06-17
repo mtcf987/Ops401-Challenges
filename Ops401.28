@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+
+# Author:                       Malena Tomlin
+# Script Name:                  Ops Challenge: Ops Challenge: Event Logging Tool Part 3 of 3
+# Date of latest revision:      06/17/2024
+
+import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
+import time
+
+# Configure logging settings
+logger = logging.getLogger('myTimedLogger')
+logger.setLevel(logging.DEBUG)
+
+# Handler for timed rotating file logs (rotates daily, keeps 7 days of backup logs)
+timed_handler = TimedRotatingFileHandler('timed_collections_tool.log', when="D", interval=1, backupCount=7)
+timed_handler.setLevel(logging.DEBUG)
+timed_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(timed_handler)
+
+# Handler for logging to a file
+file_handler = logging.FileHandler('collections_tool.log')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(file_handler)
+
+# Handler for logging to the terminal
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(stream_handler)
+
+# Function to log and print a message
+def log_and_print(message: str, level=logging.INFO) -> None:
+    print(message)
+    logger.log(level, message)
+
+# Logging a series of messages
+for i in range(5):
+    logmsg = f"Aye Aye Sir {i}"
+    logger.warning(logmsg)
+    log_and_print(f"Logging {logmsg}")
+    os.system("ls -al")
+    time.sleep(0.1)
+
+# Step 1: Assign a list of ten string elements to a variable
+my_list = ["Pvt", "PFC", "LCpl", "Cpl", "Sgt", "SSgt", "GySgt", "MGySgt", "1stSgt", "SgtMaj"]
+
+# Step 2: Print the fourth element of the list
+log_and_print(f"Fourth element: {my_list[3]}")
+logger.info('Printed the fourth element of the list')
+
+# Step 3: Print the sixth through tenth elements of the list
+log_and_print(f"Sixth through tenth elements: {my_list[5:]}")
+logger.info('Printed the sixth through tenth elements of the list')
+
+# Step 4: Change the value of the seventh element to "SNCO"
+my_list[6] = "SNCO"
+log_and_print(f"Updated list: {my_list}")
+logger.info('Updated the list by changing the value of the seventh element')
+
+# Use the append() method to add a new element to the list
+my_list.append("Marine")
+log_and_print(f"List after appending 'Marine': {my_list}")
+logger.info('Appended "Marine" to the list')
+
+# Use the clear() method to empty the list
+my_list.clear()
+log_and_print("List after clearing:")
+logger.info('Cleared the list')
+
+# Create a copy of the original list using the copy() method
+original_list = ["Pvt", "Pfc", "LCpl"]
+copied_list = original_list.copy()
+log_and_print(f"Original list: {original_list}")
+log_and_print(f"Copied list: {copied_list}")
+logger.info('Created a copy of the original list')
+
+# Use the count() method to count the occurrences of a specific element
+count_Pfc = original_list.count("Pfc")
+log_and_print(f"Count of 'Pfc': {count_Pfc}")
+logger.info('Counted occurrences of "Pfc" in the list')
+
+# Use the extend() method to extend the list with another list
+extension_list = ["NCO", "SNCO"]
+original_list.extend(extension_list)
+log_and_print(f"List after extending: {original_list}")
+logger.info('Extended the list with another list')
+
+# Use the index() method to find the index of a specific element
+try:
+    index_SSgt = original_list.index("SSgt")
+    log_and_print(f"Index of 'SSgt': {index_SSgt}")
+except ValueError:
+    log_and_print("'SSgt' is not in the list", level=logging.WARNING)
+    logger.warning("'SSgt' is not in the list")
+
+# Use the insert() method to insert an element at a specific index
+original_list.insert(1, "GySgt")
+log_and_print(f"List after inserting 'GySgt' at index 1: {original_list}")
+logger.info('Inserted "GySgt" at index 1 in the list')
+
+# Use the pop() method to remove and return an element at a specific index
+removed_element = original_list.pop(3)
+log_and_print(f"Removed element at index 3: {removed_element}")
+log_and_print(f"List after pop: {original_list}")
+logger.info('Removed an element at index 3 from the list')
+
+# Use the remove() method to remove a specific element
+try:
+    original_list.remove("SSgt")
+    log_and_print(f"List after removing 'SSgt': {original_list}")
+    logger.info('Removed "SSgt" from the list')
+except ValueError:
+    log_and_print("Cannot remove 'SSgt' from the list: 'SSgt' is not in the list", level=logging.WARNING)
+    logger.warning("'SSgt' is not in the list")
+
+# Use the reverse() method to reverse the order of elements in the list
+original_list.reverse()
+log_and_print(f"Reversed list: {original_list}")
+logger.info('Reversed the order of elements in the list')
+
+# Use the sort() method to sort the elements in the list
+original_list.sort()
+log_and_print(f"Sorted list: {original_list}")
+logger.info('Sorted the list')
+
+# Create a tuple
+my_tuple = ("Pvt", "Pfc", "LCpl")
+log_and_print(f"Tuple: {my_tuple}")
+
+# Create a set
+my_set = {"Pvt", "Pfc", "LCpl"}
+log_and_print(f"Set: {my_set}")
+
+# Create a dictionary
+my_dict = {"Marines1": "Pvt", "Marines2": "Pfc", "Marines3": "LCpl"}
+log_and_print(f"Dictionary: {my_dict}")
