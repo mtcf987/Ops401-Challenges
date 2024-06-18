@@ -1,11 +1,11 @@
-local nmap = require "nmap"
+
 
 #Author:             Malena Tomlin
 #Script Name:        Simple Information Gathering Script
 #Date of Revision:   06/17/2024
 #Purpose:            Gathers IP address/Port status for target
 
-
+local nmap = require "nmap"
 
 -- Script description and license
 description = [[
