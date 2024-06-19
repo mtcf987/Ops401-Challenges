@@ -7,15 +7,17 @@
 import subprocess
 import logging
 import os
+import shlex
 
 # Configure logging
-logging.basicConfig(filename='banner_grabbing.log', level=logging.ERROR, 
+logging.basicConfig(filename='banner_grabbing.log', level=logging.ERROR,
                     format='%(asctime)s:%(levelname)s:%(message)s')
 
 def execute_command(command: str) -> str:
     """Execute a shell command and return the output."""
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        sanitized_command = shlex.quote(command)
+        result = subprocess.run(sanitized_command, shell=True, capture_output=True, text=True)
         result.check_returncode()
         return result.stdout
     except subprocess.CalledProcessError as e:
